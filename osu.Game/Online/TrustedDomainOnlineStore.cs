@@ -10,14 +10,6 @@ namespace osu.Game.Online
     public sealed class TrustedDomainOnlineStore : OnlineStore
     {
         protected override string GetLookupUrl(string url)
-        {
-            if (!Uri.TryCreate(url, UriKind.Absolute, out Uri? uri) || !uri.Host.EndsWith(@".ppy.sh", StringComparison.OrdinalIgnoreCase))
-            {
-                Logger.Log($@"Blocking resource lookup from external website: {url}", LoggingTarget.Network, LogLevel.Important);
-                return string.Empty;
-            }
-
-            return url;
-        }
+            => url;
     }
 }
