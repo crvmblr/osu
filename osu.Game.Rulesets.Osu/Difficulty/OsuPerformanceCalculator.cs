@@ -133,18 +133,6 @@ namespace osu.Game.Rulesets.Osu.Difficulty
             if (score.Mods.Any(m => m is OsuModSpunOut) && totalHits > 0)
                 multiplier *= 1.0 - Math.Pow((double)osuAttributes.SpinnerCount / totalHits, 0.85);
 
-            if (score.Mods.Any(h => h is OsuModRelax))
-            {
-                // https://www.desmos.com/calculator/bc9eybdthb
-                // we use OD13.3 as maximum since it's the value at which great hitwidow becomes 0
-                // this is well beyond currently maximum achievable OD which is 12.17 (DTx2 + DA with OD11)
-                double okMultiplier = Math.Max(0.0, overallDifficulty > 0.0 ? 1 - Math.Pow(overallDifficulty / 13.33, 1.8) : 1.0);
-                double mehMultiplier = Math.Max(0.0, overallDifficulty > 0.0 ? 1 - Math.Pow(overallDifficulty / 13.33, 5) : 1.0);
-
-                // As we're adding Oks and Mehs to an approximated number of combo breaks the result can be higher than total hits in specific scenarios (which breaks some calculations) so we need to clamp it.
-                effectiveMissCount = Math.Min(effectiveMissCount + countOk * okMultiplier + countMeh * mehMultiplier, totalHits);
-            }
-
             speedDeviation = calculateSpeedDeviation(osuAttributes);
 
             double aimValue = computeAimValue(score, osuAttributes);
@@ -152,10 +140,15 @@ namespace osu.Game.Rulesets.Osu.Difficulty
             double accuracyValue = computeAccuracyValue(score, osuAttributes);
             double flashlightValue = computeFlashlightValue(score, osuAttributes);
 
+            var rxStreamNerf = calculateRelaxStreamsNerf(score, osuAttributes);
+            speedValue *= rxStreamNerf.speedMultiplier;
+
             double totalValue =
                 Math.Pow(
                     Math.Pow(aimValue, 1.1) +
-                    Math.Pow(speedValue, 1.1) +
+                    Math.Pow(speedValue, score.Mods.Any(m => m is OsuModRelax)
+                        ? 0.83
+                        : 1.1 * rxStreamNerf.accDepression) +
                     Math.Pow(accuracyValue, 1.1) +
                     Math.Pow(flashlightValue, 1.1), 1.0 / 1.1
                 ) * multiplier;
@@ -215,9 +208,6 @@ namespace osu.Game.Rulesets.Osu.Difficulty
             else if (approachRate < 8.0)
                 approachRateFactor = 0.05 * (8.0 - approachRate);
 
-            if (score.Mods.Any(h => h is OsuModRelax))
-                approachRateFactor = 0.0;
-
             aimValue *= 1.0 + approachRateFactor * lengthBonus; // Buff for longer maps with high AR.
 
             if (score.Mods.Any(m => m is OsuModBlinds))
@@ -237,7 +227,7 @@ namespace osu.Game.Rulesets.Osu.Difficulty
 
         private double computeSpeedValue(ScoreInfo score, OsuDifficultyAttributes attributes)
         {
-            if (score.Mods.Any(h => h is OsuModRelax) || speedDeviation == null)
+            if (speedDeviation == null)
                 return 0.0;
 
             double speedValue = OsuStrainSkill.DifficultyToPerformance(attributes.SpeedDifficulty);
@@ -287,9 +277,6 @@ namespace osu.Game.Rulesets.Osu.Difficulty
 
         private double computeAccuracyValue(ScoreInfo score, OsuDifficultyAttributes attributes)
         {
-            if (score.Mods.Any(h => h is OsuModRelax))
-                return 0.0;
-
             // This percentage only considers HitCircles of any value - in this part of the calculation we focus on hitting the timing hit window.
             double betterAccuracyPercentage;
             int amountHitObjectsWithAccuracy = attributes.HitCircleCount;
@@ -445,6 +432,37 @@ namespace osu.Game.Rulesets.Osu.Difficulty
             adjustedSpeedValue = double.Lerp(adjustedSpeedValue, speedValue, lerp);
 
             return adjustedSpeedValue / speedValue;
+        }
+
+        private (double speedMultiplier, double accDepression) calculateRelaxStreamsNerf(ScoreInfo score, OsuDifficultyAttributes difficulty)
+        {
+            float ratio = (float)Math.Round(difficulty.SpeedDifficulty / difficulty.AimDifficulty * 100.0) / 100f;
+
+            double speedMultiplier = 1.0;
+            double accDepression = 1.0;
+
+            if (ratio > 1.05f)
+            {
+                double acc = score.Accuracy;
+                double accLoss = Math.Abs(1.0 - acc);
+
+                accDepression = Math.Min(0.82 + accLoss * 0.08, 0.45);
+                speedMultiplier = accDepression;
+
+                if (ratio > 1.15f)
+                {
+                    speedMultiplier *= 0.92;
+                    accDepression *= 0.95;
+                }
+
+                if (acc < 0.95)
+                {
+                    double nerf = 1.0 - (0.95 - acc) * 0.3;
+                    speedMultiplier *= nerf;
+                }
+            }
+
+            return (speedMultiplier, accDepression);
         }
 
         // Miss penalty assumes that a player will miss on the hardest parts of a map,
