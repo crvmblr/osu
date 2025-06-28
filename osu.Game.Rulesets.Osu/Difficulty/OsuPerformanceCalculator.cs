@@ -147,8 +147,8 @@ namespace osu.Game.Rulesets.Osu.Difficulty
                 Math.Pow(
                     Math.Pow(aimValue, 1.1) +
                     Math.Pow(speedValue, score.Mods.Any(m => m is OsuModRelax)
-                        ? 0.83 * rxStreamNerf.accDepression
-                        : 1.1) +
+                        ? 0.83
+                        : 1.1 * rxStreamNerf.accDepression) +
                     Math.Pow(accuracyValue, 1.1) +
                     Math.Pow(flashlightValue, 1.1), 1.0 / 1.1
                 ) * multiplier;
