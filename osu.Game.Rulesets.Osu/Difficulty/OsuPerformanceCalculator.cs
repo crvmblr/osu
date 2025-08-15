@@ -436,6 +436,9 @@ namespace osu.Game.Rulesets.Osu.Difficulty
 
         private (double speedMultiplier, double accDepression) calculateRelaxStreamsNerf(ScoreInfo score, OsuDifficultyAttributes difficulty)
         {
+            if (score.Mods.Any(m => m is OsuModRelax))
+                return (1.0, 1.0);
+            
             float ratio = (float)Math.Round(difficulty.SpeedDifficulty / difficulty.AimDifficulty * 100.0) / 100f;
 
             double speedMultiplier = 1.0;
