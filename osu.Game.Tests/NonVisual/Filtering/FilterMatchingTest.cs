@@ -40,6 +40,11 @@ namespace osu.Game.Tests.NonVisual.Filtering
                 Author = { Username = "The Author" },
                 Source = "unit tests",
                 Tags = "look for tags too",
+                UserTags =
+                {
+                    "song representation/simple",
+                    "style/clean",
+                }
             },
             DifficultyName = "version as well",
             Length = 2500,
@@ -290,6 +295,69 @@ namespace osu.Game.Tests.NonVisual.Filtering
             carouselItem.Filter(criteria);
 
             Assert.AreEqual(filtered, carouselItem.Filtered.Value);
+        }
+
+        [TestCase("simple", false)]
+        [TestCase("\"style/clean\"", false)]
+        [TestCase("\"style/clean\"!", false)]
+        [TestCase("iNiS-style", true)]
+        [TestCase("\"reading/visually dense\"!", true)]
+        public void TestCriteriaMatchingUserTags(string query, bool filtered)
+        {
+            var beatmap = getExampleBeatmap();
+            var criteria = new FilterCriteria { UserTags = [new FilterCriteria.OptionalTextFilter { SearchTerm = query }] };
+            var carouselItem = new CarouselBeatmap(beatmap);
+            carouselItem.Filter(criteria);
+
+            Assert.AreEqual(filtered, carouselItem.Filtered.Value);
+        }
+
+        [Test]
+        public void TestCriteriaMatchingMultipleTagsAtOnce()
+        {
+            var beatmap = getExampleBeatmap();
+            var criteria = new FilterCriteria
+            {
+                UserTags =
+                [
+                    new FilterCriteria.OptionalTextFilter { SearchTerm = "\"song representation/simple\"!" },
+                    new FilterCriteria.OptionalTextFilter { SearchTerm = "\"style/clean\"!" }
+                ]
+            };
+            var carouselItem = new CarouselBeatmap(beatmap);
+            carouselItem.Filter(criteria);
+
+            Assert.AreEqual(false, carouselItem.Filtered.Value);
+        }
+
+        [Test]
+        public void TestCriteriaAllTagFiltersMustMatch()
+        {
+            var beatmap = getExampleBeatmap();
+            var criteria = new FilterCriteria
+            {
+                UserTags =
+                [
+                    new FilterCriteria.OptionalTextFilter { SearchTerm = "\"song representation/simple\"!" },
+                    new FilterCriteria.OptionalTextFilter { SearchTerm = "\"style/dirty\"!" }
+                ]
+            };
+            var carouselItem = new CarouselBeatmap(beatmap);
+            carouselItem.Filter(criteria);
+
+            Assert.AreEqual(true, carouselItem.Filtered.Value);
+        }
+
+        [Test]
+        public void TestBeatmapMustHaveAtLeastOneTagIfUserTagFilterActive()
+        {
+            var beatmap = getExampleBeatmap();
+            var criteria = new FilterCriteria { UserTags = [new FilterCriteria.OptionalTextFilter { SearchTerm = "simple" }] };
+            var carouselItem = new CarouselBeatmap(beatmap);
+            carouselItem.BeatmapInfo.Metadata.UserTags.Clear();
+            carouselItem.Filter(criteria);
+
+            Assert.True(carouselItem.Filtered.Value);
         }
 
         [Test]

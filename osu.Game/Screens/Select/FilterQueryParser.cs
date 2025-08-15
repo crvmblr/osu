@@ -16,7 +16,7 @@ namespace osu.Game.Screens.Select
     public static class FilterQueryParser
     {
         private static readonly Regex query_syntax_regex = new Regex(
-            @"\b(?<key>\w+)(?<op>(!?(:|=)|(>|<)(:|=)?))(?<value>("".*""[!]?)|(\S*))",
+            @"\b(?<key>\w+)(?<op>(!?(:|=)|(>|<)(:|=)?))(?<value>("".*?""[!]?)|(\S*))",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         internal static void ApplyQueries(FilterCriteria criteria, string query)
@@ -41,7 +41,7 @@ namespace osu.Game.Screens.Select
                 case "star":
                 case "stars":
                 case "sr":
-                    return TryUpdateCriteriaRange(ref criteria.StarDifficulty, op, value, 0.01d / 2);
+                    return TryUpdateCriteriaRange(ref criteria.StarDifficulty, op, value, 0);
 
                 case "ar":
                     return TryUpdateCriteriaRange(ref criteria.ApproachRate, op, value);
@@ -115,6 +115,12 @@ namespace osu.Game.Screens.Select
 
                 case "source":
                     return TryUpdateCriteriaText(ref criteria.Source, op, value);
+
+                case "tag":
+                    var tagFilter = new FilterCriteria.OptionalTextFilter();
+                    TryUpdateCriteriaText(ref tagFilter, op, value);
+                    criteria.UserTags.Add(tagFilter);
+                    return true;
 
                 default:
                     return criteria.RulesetCriteria?.TryParseCustomKeywordCriteria(key, op, value) ?? false;
@@ -309,6 +315,8 @@ namespace osu.Game.Screens.Select
                 case Operator.Equal:
                     range.Min = value - tolerance;
                     range.Max = value + tolerance;
+                    if (tolerance == 0)
+                        range.IsLowerInclusive = range.IsUpperInclusive = true;
                     break;
 
                 case Operator.Greater:
@@ -317,6 +325,8 @@ namespace osu.Game.Screens.Select
 
                 case Operator.GreaterOrEqual:
                     range.Min = value - tolerance;
+                    if (tolerance == 0)
+                        range.IsLowerInclusive = true;
                     break;
 
                 case Operator.Less:
@@ -325,6 +335,8 @@ namespace osu.Game.Screens.Select
 
                 case Operator.LessOrEqual:
                     range.Max = value + tolerance;
+                    if (tolerance == 0)
+                        range.IsUpperInclusive = true;
                     break;
             }
 
