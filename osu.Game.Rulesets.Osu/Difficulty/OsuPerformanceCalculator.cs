@@ -434,9 +434,13 @@ namespace osu.Game.Rulesets.Osu.Difficulty
             return adjustedSpeedValue / speedValue;
         }
 
+        /// <summary>
+        /// Applies a nerf to scores with Relax when stream difficulty exceeds aim difficulty.
+        /// higher ratio => heavier nerf on both speed and accuracy performance values.
+        /// </summary>
         private (double speedMultiplier, double accDepression) calculateRelaxStreamsNerf(ScoreInfo score, OsuDifficultyAttributes difficulty)
         {
-            if (score.Mods.Any(m => m is OsuModRelax))
+            if (!score.Mods.Any(m => m is OsuModRelax))
                 return (1.0, 1.0);
 
             float ratio = (float)Math.Round(difficulty.SpeedDifficulty / difficulty.AimDifficulty * 100.0) / 100f;
