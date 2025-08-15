@@ -34,7 +34,7 @@ namespace osu.Game.Online.API
 
             this.clientId = clientId;
             this.clientSecret = clientSecret;
-            this.endpoint = "https://osu.refx.online";
+            this.endpoint = endpoint;
         }
 
         internal void AuthenticateWithLogin(string username, string password)
