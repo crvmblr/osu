@@ -76,15 +76,13 @@ namespace osu.Game.Rulesets.Catch.Difficulty
 
             if (score.Mods.Any(m => m is ModHidden))
             {
-                // Hiddens gives almost nothing on max approach rate, and more the lower it is
+                // Remove Hidden's AR bonus at higher approach rates, as it becomes less of a difficulty increase and more of a preference.
                 if (approachRate <= 10.0)
                     value *= 1.05 + 0.075 * (10.0 - approachRate); // 7.5% for each AR below 10
-                else if (approachRate > 10.0)
-                    value *= 1.01 + 0.04 * (11.0 - Math.Min(11.0, approachRate)); // 5% at AR 10, 1% at AR 11
             }
 
             if (score.Mods.Any(m => m is ModFlashlight))
-                value *= 1.35 * lengthBonus;
+                value *= 1.40 * lengthBonus;
 
             value *= Math.Pow(accuracy(), 5.5);
 
