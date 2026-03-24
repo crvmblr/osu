@@ -43,7 +43,7 @@ namespace osu.Game.Rulesets.Catch.Difficulty
             int numTotalHits = totalComboHits();
 
             double lengthBonus =
-                0.95 + 0.3 * Math.Min(1.0, numTotalHits / 2500.0) +
+                0.95 + 0.45 * Math.Min(1.0, numTotalHits / 2500.0) +
                 (numTotalHits > 2500 ? Math.Log10(numTotalHits / 2500.0) * 0.475 : 0.0);
             value *= lengthBonus;
 
@@ -82,7 +82,7 @@ namespace osu.Game.Rulesets.Catch.Difficulty
             }
 
             if (score.Mods.Any(m => m is ModFlashlight))
-                value *= 1.40 * lengthBonus;
+                value *= 1.45 * lengthBonus;
 
             value *= Math.Pow(accuracy(), 5.5);
 
