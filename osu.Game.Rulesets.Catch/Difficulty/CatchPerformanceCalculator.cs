@@ -78,7 +78,7 @@ namespace osu.Game.Rulesets.Catch.Difficulty
             {
                 // Remove Hidden's AR bonus at higher approach rates, as it becomes less of a difficulty increase and more of a preference.
                 if (approachRate <= 10.0)
-                    value *= 1.05 + 0.075 * (9.6 - approachRate); // 7.5% for each AR below 9.6
+                    value *= 1.05 + 0.075 * (9 - approachRate); // 7.5% for each AR below 9.6
             }
 
             if (score.Mods.Any(m => m is ModFlashlight))
