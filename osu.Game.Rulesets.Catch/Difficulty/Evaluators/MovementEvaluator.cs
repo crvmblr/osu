@@ -22,7 +22,8 @@ namespace osu.Game.Rulesets.Catch.Difficulty.Evaluators
             double distanceAddition = (Math.Pow(Math.Abs(catchCurrent.DistanceMoved), 1.3) / 510);
             double sqrtStrain = Math.Sqrt(weightedStrainTime);
 
-            double edgeDashBonus = 0;
+            //TODO: Add Stay Ugly nerf
+            double edgeDashBonus = 0.25;
 
             // Direction change bonus.
             if (Math.Abs(catchCurrent.DistanceMoved) > 0.1)
