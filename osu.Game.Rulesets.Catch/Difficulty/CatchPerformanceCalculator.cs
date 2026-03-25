@@ -47,7 +47,7 @@ namespace osu.Game.Rulesets.Catch.Difficulty
                 (numTotalHits > 2500 ? Math.Log10(numTotalHits / 2500.0) * 0.475 : 0.0);
             value *= lengthBonus;
 
-            value *= Math.Pow(0.97, numMiss);
+            value *= Math.Pow(0.85, numMiss);
 
             // Combo scaling (removal)
             //if (catchAttributes.MaxCombo > 0)
