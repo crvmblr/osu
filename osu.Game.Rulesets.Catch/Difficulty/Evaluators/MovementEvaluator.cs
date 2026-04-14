@@ -22,7 +22,6 @@ namespace osu.Game.Rulesets.Catch.Difficulty.Evaluators
             double distanceAddition = (Math.Pow(Math.Abs(catchCurrent.DistanceMoved), 1.3) / 510);
             double sqrtStrain = Math.Sqrt(weightedStrainTime);
 
-            //TODO: Wait for Stay Ugly nerf to be implemented.
             double edgeDashBonus = 0;
 
             // Direction change bonus.
@@ -40,6 +39,29 @@ namespace osu.Game.Rulesets.Catch.Difficulty.Evaluators
                 distanceAddition += 12.5 * Math.Min(Math.Abs(catchCurrent.DistanceMoved), CatchDifficultyHitObject.NORMALIZED_HALF_CATCHER_WIDTH * 2)
                                     / (CatchDifficultyHitObject.NORMALIZED_HALF_CATCHER_WIDTH * 6) / sqrtStrain;
             }
+            // Linear spacing nerf.
+            double linearSpacingCount = 0;
+
+            for (int i = 0; i < Math.Min(current.Index, 10); i++)
+            {
+                var catchPrevObj = (CatchDifficultyHitObject)catchCurrent.Previous(i);
+
+                // Only same direction movements matter as they do not take any additional inputs.
+                if (Math.Sign(catchCurrent.DistanceMoved) != Math.Sign(catchPrevObj.DistanceMoved) || catchCurrent.DistanceMoved == 0 || catchPrevObj.DistanceMoved == 0)
+                    break;
+
+                double currentSpacing = Math.Abs(catchCurrent.DistanceMoved / catchCurrent.StrainTime);
+                double prevSpacing = Math.Abs(catchPrevObj.DistanceMoved / catchPrevObj.StrainTime);
+
+                double relativeDifference = Math.Abs(currentSpacing / prevSpacing - 1);
+
+                if (relativeDifference > 0.05)
+                    break;
+
+                linearSpacingCount++;
+            }
+
+            distanceAddition *= Math.Pow(0.7, linearSpacingCount);
 
             // Bonus for edge dashes.
             if (catchCurrent.LastObject.DistanceToHyperDash <= 20.0f)
